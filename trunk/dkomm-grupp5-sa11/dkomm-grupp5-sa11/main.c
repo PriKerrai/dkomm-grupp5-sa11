@@ -1,6 +1,6 @@
 #include <stdio.h>
 
 int main(){
-	printf("hej");
+	printf("he000j");
 	return 0;
 }
