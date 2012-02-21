@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <tchar.h>
+#include <string.h>
 #include "winsock2.h"
 #include "ws2tcpip.h"
 
@@ -52,7 +53,13 @@ int _tmain(int argc, _TCHAR* argv[])
 		if(ok == 0) {
 			printf("Accept incoming from: %s at port %s\n",hostName,portName);
 		}
-		char *inputHTTP = "GET /index.html HTTP/1.1\nHost: www.someschool.edu\nUser-agent: Mozilla/4.0\nConnection: close\nIf-modified-since: 2008-01-01\n\n";
+
+		// Skriv ut meddelandet från klienten
+		int iResult;
+		char *inputHTTP; //= (char*) malloc(sizeof(char)*512);
+		iResult = recv(s1, inputHTTP, 512, 0);
+		fwrite(inputHTTP,1,iResult,stdout);
+		fflush(stdout);
 		char cmdHTTP[80];
 		char filenameHTTP[80];
 		char protocolHTTP[80];
