@@ -1,11 +1,12 @@
-//  Server.cpp : Defines the entry point for the console application.
+////  Server.cpp : Defines the entry point for the console application.
+////
 //
-
 #include <stdio.h>
 #include <tchar.h>
 #include <string.h>
 #include "winsock2.h"
 #include "ws2tcpip.h"
+#include <time.h>
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -56,7 +57,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		// Skriv ut meddelandet från klienten
 		int iResult;
-		char inputHTTP[512]; //= (char*) malloc(sizeof(char)*512);
+		char *inputHTTP = (char*) malloc(sizeof(char)*512);
 		iResult = recv(s1, inputHTTP, 512, 0);
 		fwrite(inputHTTP,1,iResult,stdout);
 		fflush(stdout);
@@ -100,3 +101,4 @@ int _tmain(int argc, _TCHAR* argv[])
 	WSACleanup();
 	return 0;
 }
+
