@@ -56,7 +56,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		// Skriv ut meddelandet från klienten
 		int iResult;
-		char *inputHTTP; //= (char*) malloc(sizeof(char)*512);
+		char inputHTTP[512]; //= (char*) malloc(sizeof(char)*512);
 		iResult = recv(s1, inputHTTP, 512, 0);
 		fwrite(inputHTTP,1,iResult,stdout);
 		fflush(stdout);
