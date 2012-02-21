@@ -52,14 +52,30 @@ int _tmain(int argc, _TCHAR* argv[])
 		if(ok == 0) {
 			printf("Accept incoming from: %s at port %s\n",hostName,portName);
 		}
-
-		// Skriv ut meddelandet från klienten
-		int iResult;
-		char buffer[512];
-		iResult = recv(s1, buffer, 512, 0);
-		fwrite(buffer,1,iResult,stdout);
-		fflush(stdout);
-
+		char *inputHTTP = "GET /index.html HTTP/1.1\nHost: www.someschool.edu\nUser-agent: Mozilla/4.0\nConnection: close\nIf-modified-since: 2008-01-01\n\n";
+		char cmdHTTP[80];
+		char filenameHTTP[80];
+		char protocolHTTP[80];
+		ok = sscanf(inputHTTP,"%s %s %s",cmdHTTP,filenameHTTP,protocolHTTP);
+		char *next = strstr(inputHTTP,"\n");
+		while(next) {
+			char name[80];
+			char value[80];
+			ok = sscanf(next+1,"%s",name);
+			char *space = strstr(next+1," ");
+			next = strstr(next+1,"\n");
+			if(space) {
+				memcpy(value,space+1,next-space-1);
+				value[next-space-1]=0;
+			}
+			if(ok==1) {
+				if(strcmp(name,"If-modified-since:")==0) {
+					if(strcmp(cmdHTTP,"GET")==0) {
+						printf("I got a conditional GET with the date: %s\n",value);
+					}
+				}
+			}
+		}
 		// Skicka tillbaka ett svar till klienten
 		char *message = "Message recieved by server.";
 		int len = send(s1,message,strlen(message),0);
