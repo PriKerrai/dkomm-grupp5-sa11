@@ -20,22 +20,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\include\PCLibs2010.lib">
+    <Library Include="..\..\..\..\..\libs\PCLibs2010.lib">
       <Filter>Resource Files</Filter>
     </Library>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\include\strlib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\genlib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\random.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\simpio.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
