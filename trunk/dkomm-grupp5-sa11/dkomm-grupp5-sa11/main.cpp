@@ -8,8 +8,9 @@
 #include "ws2tcpip.h"
 #include <time.h>
 
-int _tmain(int argc, _TCHAR* argv[])
-{
+char *loadHtml(char *filename);
+
+int _tmain(int argc, _TCHAR* argv[]){
 	// Initiera WinSock
 	WORD wVersionRequested;
 	WSADATA wsaData;
@@ -66,8 +67,17 @@ int _tmain(int argc, _TCHAR* argv[])
 		char protocolHTTP[80];
 		ok = sscanf(inputHTTP,"%s %s %s",cmdHTTP,filenameHTTP,protocolHTTP);
 		// Skicka tillbaka ett svar till klienten
-		char *message = "HTTP/1.1 200 OK\nDate: Thu, 19 Feb 2009 12:27:04 GMT\nServer: Apache/2.2.3\nLast-Modified: Wed, 18 Jun 2003 16:05:58 GMT\nETag: \"56d-9989200-1132c580\"\nContent-Type: text/html\nContent-Length: 15\nAccept-Ranges: bytes\nConnection: close\n\n<html><head><title>hej</title></head><body><h1>hej</h1></body></html>";
-		int len = send(s1,message,strlen(message), 0);
+		char *message = "HTTP/1.1 200 OK\nDate: Thu, 19 Feb 2009 12:27:04 GMT\n"
+						"Server: Apache/2.2.3\n"
+						"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
+						"ETag: \"56d-9989200-1132c580\"\n"
+						"Content-Type: text/html\n"
+						"Content-Length: 15\n"
+						"Accept-Ranges: bytes\n"
+						"Connection: close\n"
+						"\n"
+						"<html><head><title>hej</title></head><body><h1>hej</h1></body></html>";
+		int len = send(s1,message,strlen(message), 1);
 
 		// Stäng sockets
 		closesocket(s1);
@@ -83,4 +93,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	return 0;
 }
 
+char *loadHtml(char *filename){
+	char *fileContent;
+	FILE *htmlFile;
+	htmlFile = fopen(filename,"w");
+	
+}
 
