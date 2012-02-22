@@ -65,28 +65,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		char filenameHTTP[80];
 		char protocolHTTP[80];
 		ok = sscanf(inputHTTP,"%s %s %s",cmdHTTP,filenameHTTP,protocolHTTP);
-		char *next = strstr(inputHTTP,"\n");
-		while(next) {
-			char name[80];
-			char value[80];
-			ok = sscanf(next+1,"%s",name);
-			char *space = strstr(next+1," ");
-			next = strstr(next+1,"\n");
-			if(space) {
-				memcpy(value,space+1,next-space-1);
-				value[next-space-1]=0;
-			}
-			if(ok==1) {
-				if(strcmp(name,"If-modified-since:")==0) {
-					if(strcmp(cmdHTTP,"GET")==0) {
-						printf("I got a conditional GET with the date: %s\n",value);
-					}
-				}
-			}
-		}
 		// Skicka tillbaka ett svar till klienten
-		char *message = "Message recieved by server.";
-		int len = send(s1,message,strlen(message),0);
+		char *message = "HTTP/1.1 200 OK\nDate: Thu, 19 Feb 2009 12:27:04 GMT\nServer: Apache/2.2.3\nLast-Modified: Wed, 18 Jun 2003 16:05:58 GMT\nETag: \"56d-9989200-1132c580\"\nContent-Type: text/html\nContent-Length: 15\nAccept-Ranges: bytes\nConnection: close\n\n<html><head><title>hej</title></head><body><h1>hej</h1></body></html>";
+		int len = send(s1,message,strlen(message), 0);
 
 		// Stäng sockets
 		closesocket(s1);
@@ -101,4 +82,5 @@ int _tmain(int argc, _TCHAR* argv[])
 	WSACleanup();
 	return 0;
 }
+
 
