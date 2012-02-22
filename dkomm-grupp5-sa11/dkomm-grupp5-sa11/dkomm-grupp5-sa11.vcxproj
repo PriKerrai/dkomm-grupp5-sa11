@@ -43,12 +43,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>F:\Dokument\Visual Studio 2010\Projects\dkomm-grupp5-sa11%281%29\dkomm-grupp5-sa11\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>F:\Dokument\libs;$(IncludePath)</IncludePath>
+    <LibraryPath>F:\Dokument\libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>F:\Dokument\Visual Studio 2010\Projects\dkomm-grupp5-sa11%281%29\dkomm-grupp5-sa11\include;$(IncludePath)</IncludePath>
+    <IncludePath>F:\Dokument\libs;$(IncludePath)</IncludePath>
+    <LibraryPath>F:\Dokument\libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -94,13 +95,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\include\PCLibs2010.lib" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\include\genlib.h" />
-    <ClInclude Include="..\include\random.h" />
-    <ClInclude Include="..\include\simpio.h" />
-    <ClInclude Include="..\include\strlib.h" />
+    <Library Include="..\..\..\..\..\libs\PCLibs2010.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -7,6 +7,11 @@
 #include "winsock2.h"
 #include "ws2tcpip.h"
 #include <time.h>
+#include <simpio.h>
+#include <genlib.h>
+#include "F:\Dokument\libs\strlib.h"
+
+
 
 char *loadHtml(char *filename);
 
@@ -67,7 +72,8 @@ int _tmain(int argc, _TCHAR* argv[]){
 		char protocolHTTP[80];
 		ok = sscanf(inputHTTP,"%s %s %s",cmdHTTP,filenameHTTP,protocolHTTP);
 		// Skicka tillbaka ett svar till klienten
-		char *message = "HTTP/1.1 200 OK\nDate: Thu, 19 Feb 2009 12:27:04 GMT\n"
+		string message = "HTTP/1.1 200 OK\n"
+						"Date: Thu, 19 Feb 2009 12:27:04 GMT\n"
 						"Server: Apache/2.2.3\n"
 						"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
 						"ETag: \"56d-9989200-1132c580\"\n"
@@ -75,10 +81,9 @@ int _tmain(int argc, _TCHAR* argv[]){
 						"Content-Length: 15\n"
 						"Accept-Ranges: bytes\n"
 						"Connection: close\n"
-						"\n"
-						"<html><head><title>hej</title></head><body><h1>hej</h1></body></html>";
+						"\n";
+		message = Concat(message,loadHtml(filenameHTTP));
 		int len = send(s1,message,strlen(message), 1);
-
 		// Stäng sockets
 		closesocket(s1);
 	}
@@ -93,10 +98,17 @@ int _tmain(int argc, _TCHAR* argv[]){
 	return 0;
 }
 
-char *loadHtml(char *filename){
-	char *fileContent;
+string loadHtml(char *filename){
+	char *line;
+	char *fileContent = "";
 	FILE *htmlFile;
-	htmlFile = fopen(filename,"w");
-	
+	htmlFile = fopen(filename,"r");
+	if(htmlFile==NULL)
+		return "<b>404</b>";
+	do{
+		line = ReadLine(htmlFile);
+		fileContent = Concat(fileContent,line);
+	}while(line[0] != '\0');
+	return fileContent;
 }
 
