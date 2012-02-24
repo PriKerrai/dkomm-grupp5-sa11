@@ -22,7 +22,7 @@ int _tmain(int argc, _TCHAR* argv[]){
  	wVersionRequested = MAKEWORD( 2, 2 );
  	err = WSAStartup( wVersionRequested, &wsaData );
 
-	// Skapa en socket
+	// Skapa en socket 
 	SOCKET s = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
 
 	// Ta reda på addressen till localhost:4567
