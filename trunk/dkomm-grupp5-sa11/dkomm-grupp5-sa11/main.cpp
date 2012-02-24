@@ -3,17 +3,16 @@
 //
 #include <stdio.h>
 #include <tchar.h>
-#include <string.h>
+//#include <string.h>
 #include "winsock2.h"
 #include "ws2tcpip.h"
 #include <time.h>
-#include <simpio.h>
-#include <genlib.h>
-#include "F:\Dokument\libs\strlib.h"
+#include <fstream>
+//#include "F:\Dokument\libs\strlib.h"
+#include <string>
 
-
-
-char *loadHtml(char *filename);
+using namespace std;
+string loadHtml(string filename);
 
 int _tmain(int argc, _TCHAR* argv[]){
 	// Initiera WinSock
@@ -28,7 +27,7 @@ int _tmain(int argc, _TCHAR* argv[]){
 
 	// Ta reda på addressen till localhost:4567
 	struct addrinfo *info;
-    int ok = getaddrinfo("localhost","4567",NULL,&info);
+    int ok = getaddrinfo("193.10.247.115","4567",NULL,&info);
 	if(ok!=0) {
 		WCHAR * error = gai_strerror(ok);
 		printf("%s\n",error);
@@ -82,8 +81,8 @@ int _tmain(int argc, _TCHAR* argv[]){
 						"Accept-Ranges: bytes\n"
 						"Connection: close\n"
 						"\n";
-		message = Concat(message,loadHtml(filenameHTTP));
-		int len = send(s1,message,strlen(message), 1);
+		message.append(loadHtml(filenameHTTP));
+		int len = send(s1,message._Myptr(),message.length(), 1);
 		// Stäng sockets
 		closesocket(s1);
 	}
@@ -97,18 +96,20 @@ int _tmain(int argc, _TCHAR* argv[]){
 	WSACleanup();
 	return 0;
 }
-
-string loadHtml(char *filename){
-	char *line;
-	char *fileContent = "";
-	FILE *htmlFile;
-	htmlFile = fopen(filename,"r");
-	if(htmlFile==NULL)
+string loadHtml(string filename){
+	string line;
+	string fileContent = "";
+	filename.erase(0,1);
+	ifstream htmlFile("Ho.html");
+	
+	if(htmlFile.is_open()){
+		do{
+			getline(htmlFile, line);
+			fileContent.append(line);
+			fileContent.append("\n");
+		}while(htmlFile.good());
+	}else
 		return "<b>404</b>";
-	do{
-		line = ReadLine(htmlFile);
-		fileContent = Concat(fileContent,line);
-	}while(line[0] != '\0');
 	return fileContent;
 }
 
