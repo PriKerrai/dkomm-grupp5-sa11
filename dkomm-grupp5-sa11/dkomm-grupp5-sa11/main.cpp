@@ -12,7 +12,7 @@
 
 using namespace std;
 string getMime(string filename);
-string loadHtml(string filename);
+void loadHtml(char *buffer, string filename, int &size);
 string filetypeToMime(string filetype);
 string toLowerCase(string toConvert);
 int _tmain(int argc, _TCHAR* argv[]){
@@ -72,19 +72,19 @@ int _tmain(int argc, _TCHAR* argv[]){
 		char protocolHTTP[80];
 		ok = sscanf(inputHTTP,"%s %s %s",cmdHTTP,filenameHTTP,protocolHTTP);
 		// Skicka tillbaka ett svar till klienten
-		string mime = getMime(filenameHTTP);
-		string message = "HTTP/1.1 404 OK\n"
-						"Date: Thu, 19 Feb 2009 12:27:04 GMT\n"
-						"Server: Apache/2.2.3\n"
-						"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
-						"ETag: \"56d-9989200-1132c580\"\n"
-						"Content-Type: " +mime+
-						"\nContent-Length: 15\n"
-						"Accept-Ranges: bytes\n"
-						"Connection: close\n"
-						"\n";
-		message.append(loadHtml(filenameHTTP));
-		int len = send(s1,message._Myptr(),message.length(), 1);
+		
+		int size = 0;
+		char buffer[1024];
+		loadHtml(buffer,filenameHTTP,size);
+		
+		
+		int bytesIndex = 0;
+		//int len = send(s1,message._Myptr(),message.length(), 1);
+		while(size != 0){
+			int len = send(s1,buffer,size, 1);
+			size -= len;
+			bytesIndex +=len;
+		}
 		// Stäng sockets
 		closesocket(s1);
 	}
@@ -101,7 +101,7 @@ int _tmain(int argc, _TCHAR* argv[]){
 	
 }
 
-string getMime(string filename){
+string getFiletype(string filename){
 	int i = filename.length();
 	int len = i - 1;
 	string filetype = "";
@@ -110,9 +110,10 @@ string getMime(string filename){
 		i--;
 	}
 	filetype.append(filename.substr(i));
-	return filetypeToMime(filetype);
+	return filetype;
 }
-string filetypeToMime(string filetype){
+string getMime(string fileName){
+	string filetype = getFiletype(fileName);
 	int len = filetype.length() -1;
 	if(filetype.compare("html") == 0)
 		return "text/html";
@@ -123,22 +124,47 @@ string filetypeToMime(string filetype){
 	else return "kuk";
 }
 
-string loadHtml(string filename){
+void loadHtml(char buffer, string filename, int &size){
+	int i = 0;
+	int len;
 	string line;
 	string fileContent = "";
 	filename.erase(0,1);
-	ifstream htmlFile(filename);
-	if(htmlFile.is_open()){
-		do{
-			getline(htmlFile, line);
-			fileContent.append(line);
-			fileContent.append("\n");
-		}while(htmlFile.good());
-	}else
-		return "<b>404</b>";
-	return fileContent;
+	string filetype = getFiletype(filename);
+	ifstream htmlFile;
+	string mime = getMime(filename);
+	char *temp;
+	if(filetype.compare("html") == 0){
+		htmlFile.open(filename,ios::in);
+		if(htmlFile.is_open()){
+			do{
+				getline(htmlFile, line);
+				len = line.length();
+				for(int j=0;j<len; j++){
+					temp[i] = line[j];
+				}
+				temp[i+1] = '\n';
+				i++;
+			}while(htmlFile.good());
+		}else
+			buffer = "<b>404</b>";
+	}else{
+		htmlFile.open(filename,ios::binary);
+	}
+	buffer =			"HTTP/1.1 404 OK\n"
+						"Date: Thu, 19 Feb 2012 16:27:04 GMT\n"
+						"Server: Apache/2.2.3\n"
+						"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
+						"ETag: \"56d-9989200-1132c580\"\n"
+						"Content-Type: " + getMime(filename) +
+						"\nContent-Length: 15\n"
+						"Accept-Ranges: bytes\n"
+						"Connection: close\n"
+						"\n" + temp;
+	size = htmlFile.gcount();
+	
 }
-
+char *stringToArray();
 string toLowerCase(string toConvert){
 	string converted = "";
 	int len = toConvert.length() - 1;
