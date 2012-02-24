@@ -2,19 +2,21 @@
 ////
 //
 #include <stdio.h>
+#include <iostream>
 #include <tchar.h>
-//#include <string.h>
 #include "winsock2.h"
 #include "ws2tcpip.h"
 #include <time.h>
 #include <fstream>
-//#include "F:\Dokument\libs\strlib.h"
 #include <string>
 
 using namespace std;
+string getMime(string filename);
 string loadHtml(string filename);
-
+string filetypeToMime(string filetype);
+string toLowerCase(string toConvert);
 int _tmain(int argc, _TCHAR* argv[]){
+	while(TRUE){
 	// Initiera WinSock
 	WORD wVersionRequested;
 	WSADATA wsaData;
@@ -27,7 +29,7 @@ int _tmain(int argc, _TCHAR* argv[]){
 
 	// Ta reda på addressen till localhost:4567
 	struct addrinfo *info;
-    int ok = getaddrinfo("193.10.247.115","4567",NULL,&info);
+    int ok = getaddrinfo("localhost","4567",NULL,&info);
 	if(ok!=0) {
 		WCHAR * error = gai_strerror(ok);
 		printf("%s\n",error);
@@ -59,7 +61,6 @@ int _tmain(int argc, _TCHAR* argv[]){
 		if(ok == 0) {
 			printf("Accept incoming from: %s at port %s\n",hostName,portName);
 		}
-
 		// Skriv ut meddelandet från klienten
 		int iResult;
 		char *inputHTTP = (char*) malloc(sizeof(char)*512);
@@ -71,13 +72,14 @@ int _tmain(int argc, _TCHAR* argv[]){
 		char protocolHTTP[80];
 		ok = sscanf(inputHTTP,"%s %s %s",cmdHTTP,filenameHTTP,protocolHTTP);
 		// Skicka tillbaka ett svar till klienten
-		string message = "HTTP/1.1 200 OK\n"
+		string mime = getMime(filenameHTTP);
+		string message = "HTTP/1.1 404 OK\n"
 						"Date: Thu, 19 Feb 2009 12:27:04 GMT\n"
 						"Server: Apache/2.2.3\n"
 						"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
 						"ETag: \"56d-9989200-1132c580\"\n"
-						"Content-Type: text/html\n"
-						"Content-Length: 15\n"
+						"Content-Type: " +mime+
+						"\nContent-Length: 15\n"
 						"Accept-Ranges: bytes\n"
 						"Connection: close\n"
 						"\n";
@@ -94,14 +96,34 @@ int _tmain(int argc, _TCHAR* argv[]){
 
 	// Deinitiera WinSock
 	WSACleanup();
+	}
 	return 0;
+	
 }
+
+string getMime(string filename){
+	int j=filename.length();
+	string filetype = "";
+	filename = toLowerCase(filename);
+	while(filename[j-1] != '.'){
+		filetype.insert(0,""+filename[j-1]);
+		j--;
+	}
+	return filetypeToMime(filetype);
+}
+string filetypeToMime(string filetype){
+	if(filetype.)
+		return "text/html";
+	else if(filetype.compare("jpeg")||filetype.compare("jpg"))
+		return "image/jpeg";
+	else return "kuk";
+}
+
 string loadHtml(string filename){
 	string line;
 	string fileContent = "";
 	filename.erase(0,1);
-	ifstream htmlFile("Ho.html");
-	
+	ifstream htmlFile(filename);
 	if(htmlFile.is_open()){
 		do{
 			getline(htmlFile, line);
@@ -113,3 +135,12 @@ string loadHtml(string filename){
 	return fileContent;
 }
 
+string toLowerCase(string toConvert){
+	string converted = "";
+	int len = toConvert.length() - 1;
+	for (int i=0;i<len;i++){
+		if (toConvert[i] >= 0x41 && toConvert[i] <= 0x5A)
+			toConvert[i] = toConvert[i] + 0x20;
+	}
+	return toConvert;
+}
