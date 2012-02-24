@@ -102,20 +102,24 @@ int _tmain(int argc, _TCHAR* argv[]){
 }
 
 string getMime(string filename){
-	int j=filename.length();
+	int i = filename.length();
+	int len = i - 1;
 	string filetype = "";
 	filename = toLowerCase(filename);
-	while(filename[j-1] != '.'){
-		filetype.insert(0,""+filename[j-1]);
-		j--;
+	while(filename[i-1] != '.'){
+		i--;
 	}
+	filetype.append(filename.substr(i));
 	return filetypeToMime(filetype);
 }
 string filetypeToMime(string filetype){
-	if(filetype.)
+	int len = filetype.length() -1;
+	if(filetype.compare("html") == 0)
 		return "text/html";
-	else if(filetype.compare("jpeg")||filetype.compare("jpg"))
+	else if(filetype.compare("jpeg") == 0||filetype.compare("jpg") == 0)
 		return "image/jpeg";
+	else if(filetype.compare("png") == 0)
+		return "image/png";
 	else return "kuk";
 }
 
