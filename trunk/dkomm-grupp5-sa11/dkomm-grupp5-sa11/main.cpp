@@ -10,13 +10,19 @@
 #include <fstream>
 #include <string>
 
+typedef unsigned char uByte;
 using namespace std;
+
 string getMime(string filename);
-void loadHtml(char *buffer, string filename, int &size);
+char *loadBin(string filename, int &size);
+char *mergeVector(char *vector1, int size1, char *vector2, int size2);
+char *loadHtml(string filename, int &size);
+string getFiletype(string filename);
 string filetypeToMime(string filetype);
 string toLowerCase(string toConvert);
+void stringToVector(string toConvert, char vector[], int size);
 int _tmain(int argc, _TCHAR* argv[]){
-	while(TRUE){
+	
 	// Initiera WinSock
 	WORD wVersionRequested;
 	WSADATA wsaData;
@@ -53,6 +59,7 @@ int _tmain(int argc, _TCHAR* argv[]){
 	// Vänta på inkommande anrop
 	struct sockaddr clientAddr;
 	int clientAddrLen = sizeof(clientAddr);
+	while(TRUE){
 	SOCKET s1 = accept(s,&clientAddr,&clientAddrLen);
 	if(s1 != INVALID_SOCKET) {
 		char hostName[100];
@@ -70,33 +77,36 @@ int _tmain(int argc, _TCHAR* argv[]){
 		char cmdHTTP[80];
 		char filenameHTTP[80];
 		char protocolHTTP[80];
-		ok = sscanf(inputHTTP,"%s %s %s",cmdHTTP,filenameHTTP,protocolHTTP);
+		ok = sscanf(inputHTTP,"%s /%s %s",cmdHTTP,filenameHTTP,protocolHTTP);
 		// Skicka tillbaka ett svar till klienten
-		
+		string filetype = getFiletype(filenameHTTP);
 		int size = 0;
-		char buffer[1024];
-		loadHtml(buffer,filenameHTTP,size);
-		
+		char * buffer = (char *) malloc(1);
+		if(filetype.compare("html") == 0){
+			buffer = loadHtml(filenameHTTP,size);
+			int len = send(s1,buffer,size, 1);
+		}else{
+			char *binBuff = loadBin(filenameHTTP,size);
+			int len = send(s1,binBuff,size, 1);
+		}
 		
 		int bytesIndex = 0;
-		//int len = send(s1,message._Myptr(),message.length(), 1);
-		while(size != 0){
-			int len = send(s1,buffer,size, 1);
-			size -= len;
-			bytesIndex +=len;
-		}
+		
+		
 		// Stäng sockets
 		closesocket(s1);
+		
 	}
 	else {
 		int err = WSAGetLastError();
 		printf("%d\n",err);
 	}
+	}
 	closesocket(s);
 
 	// Deinitiera WinSock
 	WSACleanup();
-	}
+	
 	return 0;
 	
 }
@@ -124,47 +134,67 @@ string getMime(string fileName){
 	else return "kuk";
 }
 
-void loadHtml(char buffer, string filename, int &size){
+char * loadHtml(string filename, int &size){
 	int i = 0;
 	int len;
 	string line;
-	string fileContent = "";
-	filename.erase(0,1);
-	string filetype = getFiletype(filename);
 	ifstream htmlFile;
-	string mime = getMime(filename);
-	char *temp;
-	if(filetype.compare("html") == 0){
-		htmlFile.open(filename,ios::in);
-		if(htmlFile.is_open()){
-			do{
-				getline(htmlFile, line);
-				len = line.length();
-				for(int j=0;j<len; j++){
-					temp[i] = line[j];
-				}
-				temp[i+1] = '\n';
-				i++;
-			}while(htmlFile.good());
-		}else
-			buffer = "<b>404</b>";
-	}else{
-		htmlFile.open(filename,ios::binary);
-	}
-	buffer =			"HTTP/1.1 404 OK\n"
+	string message =	"HTTP/1.1 404 OK\n"
 						"Date: Thu, 19 Feb 2012 16:27:04 GMT\n"
 						"Server: Apache/2.2.3\n"
 						"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
 						"ETag: \"56d-9989200-1132c580\"\n"
-						"Content-Type: " + getMime(filename) +
+						"Content-Type: text/html"
 						"\nContent-Length: 15\n"
 						"Accept-Ranges: bytes\n"
 						"Connection: close\n"
-						"\n" + temp;
-	size = htmlFile.gcount();
-	
+						"\n";
+	size = message.length();
+	htmlFile.open(filename,ios::in);
+	if(htmlFile.is_open()){
+		do{
+			getline(htmlFile, line);
+			message.append(line+"\n");
+			i++;
+		}while(htmlFile.good());
+	}else
+		message.append("<b>404</b>");
+	size = message.length();
+	char *buffer = (char *)malloc(size);
+	stringToVector(message, buffer, size);
+	return buffer;
 }
-char *stringToArray();
+char *loadBin(string filename, int &size){
+	fstream binFile;
+	string line;
+	string mime = getMime(filename);
+	string header =	"HTTP/1.1 404 OK\n"
+						"Date: Thu, 19 Feb 2012 16:27:04 GMT\n"
+						"Server: Apache/2.2.3\n"
+						"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
+						"ETag: \"56d-9989200-1132c580\"\n"
+						"Content-Type: " +mime+
+						"\nContent-Length: 15\n"
+						"Accept-Ranges: bytes\n"
+						"Connection: close\n"
+						"\n";
+	binFile.open(filename,ios::in|ios::binary|ios::ate);
+	
+	int buffsize = binFile.tellg();
+	char *buffer = (char *) malloc(buffsize);
+	int headLen =header.length(); 
+	char *headerVector = (char *)malloc(headLen);
+	headerVector = header._Myptr();
+	binFile.seekg (0, ios::beg);
+	binFile.read (buffer, buffsize);
+	size = buffsize + headLen;
+	return mergeVector(headerVector,headLen,buffer,buffsize);
+}
+void stringToVector(string toConvert, char vector[], int size){
+	for (int i = 0; i<size; i++){
+		vector[i] = toConvert[i];
+	}
+}
 string toLowerCase(string toConvert){
 	string converted = "";
 	int len = toConvert.length() - 1;
@@ -173,4 +203,16 @@ string toLowerCase(string toConvert){
 			toConvert[i] = toConvert[i] + 0x20;
 	}
 	return toConvert;
+}
+char *mergeVector(char *vector1, int size1, char *vector2, int size2){
+	char * newVector = (char *)malloc(size1+size2);
+	int i;
+	for (i = 0; i < size1; i++){
+		newVector[i] = vector1[i];
+	}
+	for (int j = 0; j < size2; j++){
+		newVector[i+j] = vector2[j];
+	}
+	return newVector;
+
 }
