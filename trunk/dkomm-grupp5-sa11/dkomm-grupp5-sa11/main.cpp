@@ -60,6 +60,7 @@ int _tmain(int argc, _TCHAR* argv[]){
 	struct sockaddr clientAddr;
 	int clientAddrLen = sizeof(clientAddr);
 	while(TRUE){
+	
 	SOCKET s1 = accept(s,&clientAddr,&clientAddrLen);
 	if(s1 != INVALID_SOCKET) {
 		char hostName[100];
@@ -82,15 +83,16 @@ int _tmain(int argc, _TCHAR* argv[]){
 		string filetype = getFiletype(filenameHTTP);
 		int size = 0;
 		char * buffer = (char *) malloc(1);
+		int len = 0;
 		if(filetype.compare("html") == 0){
 			buffer = loadHtml(filenameHTTP,size);
-			int len = send(s1,buffer,size, 1);
+			len = send(s1,buffer,size, 1);
 		}else{
 			char *binBuff = loadBin(filenameHTTP,size);
-			int len = send(s1,binBuff,size, 1);
+			len = send(s1,binBuff,size, 1);
 		}
 		
-		int bytesIndex = 0;
+		int bytesIndex = size - len;
 		
 		
 		// Stäng sockets
@@ -138,57 +140,77 @@ char * loadHtml(string filename, int &size){
 	int i = 0;
 	int len;
 	string line;
+	char ch;
+	char intToStrBuff[32];
 	ifstream htmlFile;
+	htmlFile.open(filename,ios::in);
+	size = 0;
+	while(htmlFile){
+		htmlFile.get(ch);
+		size++;
+	}
+	string fileSize = itoa(size,intToStrBuff,10);
+	htmlFile.close();
+	htmlFile.open(filename,ios::in);
 	string message =	"HTTP/1.1 404 OK\n"
 						"Date: Thu, 19 Feb 2012 16:27:04 GMT\n"
 						"Server: Apache/2.2.3\n"
 						"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
 						"ETag: \"56d-9989200-1132c580\"\n"
 						"Content-Type: text/html"
-						"\nContent-Length: 15\n"
-						"Accept-Ranges: bytes\n"
-						"Connection: close\n"
+						"\nContent-Length: " + fileSize + 
+						"\nAccept-Ranges: bytes\n"
+						"Connection: keep-alive\n"
 						"\n";
-	size = message.length();
-	htmlFile.open(filename,ios::in);
+	size += message.length();
+	
 	if(htmlFile.is_open()){
 		do{
 			getline(htmlFile, line);
 			message.append(line+"\n");
-			i++;
 		}while(htmlFile.good());
 	}else
 		message.append("<b>404</b>");
-	size = message.length();
 	char *buffer = (char *)malloc(size);
 	stringToVector(message, buffer, size);
+	htmlFile.close();
 	return buffer;
 }
 char *loadBin(string filename, int &size){
 	fstream binFile;
 	string line;
-	string mime = getMime(filename);
-	string header =	"HTTP/1.1 404 OK\n"
+	string mime;
+	int buffsize = 0;
+	char *buffer = '\0';
+	int headLen = 0; 
+	char *headerVector;
+	string header;
+	char intToStrBuff[32];
+	binFile.open(filename,ios::in|ios::binary|ios::ate);
+	if(binFile.is_open()){
+		buffsize = binFile.tellg();
+		buffer = (char *) malloc(buffsize);
+
+		header =	"HTTP/1.1 404 OK\n"
 						"Date: Thu, 19 Feb 2012 16:27:04 GMT\n"
 						"Server: Apache/2.2.3\n"
 						"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
 						"ETag: \"56d-9989200-1132c580\"\n"
 						"Content-Type: " +mime+
-						"\nContent-Length: 15\n"
-						"Accept-Ranges: bytes\n"
-						"Connection: close\n"
+						"\nContent-Length: " + itoa(buffsize,intToStrBuff,10) + 
+						"\nAccept-Ranges: bytes\n"
+						"Connection: keep-alive\n"
 						"\n";
-	binFile.open(filename,ios::in|ios::binary|ios::ate);
-	
-	int buffsize = binFile.tellg();
-	char *buffer = (char *) malloc(buffsize);
-	int headLen =header.length(); 
-	char *headerVector = (char *)malloc(headLen);
-	headerVector = header._Myptr();
-	binFile.seekg (0, ios::beg);
-	binFile.read (buffer, buffsize);
-	size = buffsize + headLen;
-	return mergeVector(headerVector,headLen,buffer,buffsize);
+		headLen =header.length(); 
+		headerVector = (char *)malloc(headLen);
+		headerVector = header._Myptr();
+		binFile.seekg (0, ios::beg);
+		binFile.read (buffer, buffsize);
+		size = buffsize + headLen;
+		buffer = mergeVector(headerVector,headLen,buffer,buffsize);
+	}else
+		size = 0;
+	return buffer;
 }
 void stringToVector(string toConvert, char vector[], int size){
 	for (int i = 0; i<size; i++){
