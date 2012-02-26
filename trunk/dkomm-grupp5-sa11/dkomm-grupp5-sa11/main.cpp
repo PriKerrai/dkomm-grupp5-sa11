@@ -9,18 +9,22 @@
 #include <time.h>
 #include <fstream>
 #include <string>
-
-typedef unsigned char uByte;
+#include <string.h>
+#include <sys/stat.h>
+#include <ctime>
 using namespace std;
 
 string getMime(string filename);
-char *loadBin(string filename, int &size);
-char *mergeVector(char *vector1, int size1, char *vector2, int size2);
-char *loadHtml(string filename, int &size);
+string getMonth(int month);
+string getWeekday(int weekday);
+string createHeader(string filename, ULONG size);
+char *loadBin(string filename, ULONG &size);
+char *mergeVector(char *vector1, ULONG size1, char *vector2, ULONG size2);
+char *loadHtml(string filename, ULONG &size);
 string getFiletype(string filename);
 string filetypeToMime(string filetype);
-string toLowerCase(string toConvert);
-void stringToVector(string toConvert, char vector[], int size);
+
+void stringToVector(string toConvert, char vector[], ULONG size);
 int _tmain(int argc, _TCHAR* argv[]){
 	
 	// Initiera WinSock
@@ -81,20 +85,21 @@ int _tmain(int argc, _TCHAR* argv[]){
 		ok = sscanf(inputHTTP,"%s /%s %s",cmdHTTP,filenameHTTP,protocolHTTP);
 		// Skicka tillbaka ett svar till klienten
 		string filetype = getFiletype(filenameHTTP);
-		int size = 0;
-		char * buffer = (char *) malloc(1);
-		int len = 0;
+		ULONG size = 0;
+		ULONG len = 0;
+		char *buffer;
 		if(filetype.compare("html") == 0){
 			buffer = loadHtml(filenameHTTP,size);
 			len = send(s1,buffer,size, 1);
+			
 		}else{
-			char *binBuff = loadBin(filenameHTTP,size);
-			len = send(s1,binBuff,size, 1);
+			buffer = loadBin(filenameHTTP,size);
+			len = send(s1,buffer,size, 1);
 		}
 		
-		int bytesIndex = size - len;
+		ULONG bytesIndex = size - len;
 		
-		
+		free(buffer);
 		// Stäng sockets
 		closesocket(s1);
 		
@@ -117,7 +122,6 @@ string getFiletype(string filename){
 	int i = filename.length();
 	int len = i - 1;
 	string filetype = "";
-	filename = toLowerCase(filename);
 	while(filename[i-1] != '.'){
 		i--;
 	}
@@ -133,35 +137,25 @@ string getMime(string fileName){
 		return "image/jpeg";
 	else if(filetype.compare("png") == 0)
 		return "image/png";
-	else return "kuk";
+	else return "other";
 }
 
-char * loadHtml(string filename, int &size){
+char * loadHtml(string filename, ULONG &size){
 	int i = 0;
-	int len;
 	string line;
 	char ch;
 	char intToStrBuff[32];
 	ifstream htmlFile;
 	htmlFile.open(filename,ios::in);
 	size = 0;
-	while(htmlFile){
+	while(htmlFile.good()){
 		htmlFile.get(ch);
 		size++;
 	}
-	string fileSize = itoa(size,intToStrBuff,10);
+	string fileSize = _ultoa(size,intToStrBuff,10);
 	htmlFile.close();
 	htmlFile.open(filename,ios::in);
-	string message =	"HTTP/1.1 404 OK\n"
-						"Date: Thu, 19 Feb 2012 16:27:04 GMT\n"
-						"Server: Apache/2.2.3\n"
-						"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
-						"ETag: \"56d-9989200-1132c580\"\n"
-						"Content-Type: text/html"
-						"\nContent-Length: " + fileSize + 
-						"\nAccept-Ranges: bytes\n"
-						"Connection: keep-alive\n"
-						"\n";
+	string message = createHeader(filename, size);
 	size += message.length();
 	
 	if(htmlFile.is_open()){
@@ -176,31 +170,23 @@ char * loadHtml(string filename, int &size){
 	htmlFile.close();
 	return buffer;
 }
-char *loadBin(string filename, int &size){
+char *loadBin(string filename, ULONG &size){
 	fstream binFile;
 	string line;
 	string mime;
-	int buffsize = 0;
+	ULONG buffsize = 0;
 	char *buffer = '\0';
 	int headLen = 0; 
 	char *headerVector;
 	string header;
-	char intToStrBuff[32];
 	binFile.open(filename,ios::in|ios::binary|ios::ate);
 	if(binFile.is_open()){
+		if(!(binFile.tellg() > sizeof(ULONG)))
+			buffsize = 0;
 		buffsize = binFile.tellg();
 		buffer = (char *) malloc(buffsize);
 
-		header =	"HTTP/1.1 404 OK\n"
-						"Date: Thu, 19 Feb 2012 16:27:04 GMT\n"
-						"Server: Apache/2.2.3\n"
-						"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
-						"ETag: \"56d-9989200-1132c580\"\n"
-						"Content-Type: " +mime+
-						"\nContent-Length: " + itoa(buffsize,intToStrBuff,10) + 
-						"\nAccept-Ranges: bytes\n"
-						"Connection: keep-alive\n"
-						"\n";
+		header = createHeader(filename, buffsize);
 		headLen =header.length(); 
 		headerVector = (char *)malloc(headLen);
 		headerVector = header._Myptr();
@@ -212,29 +198,111 @@ char *loadBin(string filename, int &size){
 		size = 0;
 	return buffer;
 }
-void stringToVector(string toConvert, char vector[], int size){
-	for (int i = 0; i<size; i++){
+void stringToVector(string toConvert, char vector[], ULONG size){
+	for (ULONG i = 0; i<size; i++){
 		vector[i] = toConvert[i];
 	}
 }
-string toLowerCase(string toConvert){
-	string converted = "";
-	int len = toConvert.length() - 1;
-	for (int i=0;i<len;i++){
-		if (toConvert[i] >= 0x41 && toConvert[i] <= 0x5A)
-			toConvert[i] = toConvert[i] + 0x20;
-	}
-	return toConvert;
-}
-char *mergeVector(char *vector1, int size1, char *vector2, int size2){
+char *mergeVector(char *vector1, ULONG size1, char *vector2, ULONG size2){
 	char * newVector = (char *)malloc(size1+size2);
-	int i;
+	ULONG i,j;
 	for (i = 0; i < size1; i++){
 		newVector[i] = vector1[i];
 	}
-	for (int j = 0; j < size2; j++){
+	for ( j = 0; j < size2; j++){
 		newVector[i+j] = vector2[j];
 	}
 	return newVector;
 
+}
+string createHeader(string filename, ULONG size){
+	struct stat attrib;
+	char intToStrBuff[32];
+	struct tm* clock;
+	string mime = getMime(filename);
+	stat(filename.c_str(),&attrib);
+	clock = gmtime(&(attrib.st_mtime));
+	string day = _itoa(clock->tm_mday,intToStrBuff,10);
+	string year =  _itoa(clock->tm_year,intToStrBuff,10);
+	string month = getMonth(clock->tm_mon);
+	string weekday = getWeekday(clock->tm_wday);
+	string hour = _itoa(clock->tm_hour,intToStrBuff,10);
+	string minute = _itoa(clock->tm_min,intToStrBuff,10);
+	string sec = _itoa(clock->tm_sec,intToStrBuff,10);
+	string date = weekday+", "+day+" "+month+" "+year+" "+hour+":"+minute+":"+sec+"GMT+1";
+	return "HTTP/1.1 200 OK\n"
+						"Date: Thu, 19 Feb 2012 16:27:04\n"
+						"Server: MegaSurver1337\n"
+						"Last-Modified: "+date+"\n"
+						"ETag: \"56d-9989200-1132c580\"\n"
+						"Content-Type: " +mime+
+						"\nContent-Length: " + _ultoa(size,intToStrBuff,10) + 
+						"\nAccept-Ranges: bytes\n"
+						"Connection: keep-alive\n"
+						"\n";
+}
+string getMonth(int month){
+	switch(month){
+		case 0:
+			return "Jan";
+			break;
+		case 1:
+			return "Feb";
+			break;
+		case 2:
+			return "Mar";
+			break;
+		case 3:
+			return "Apr";
+			break;
+		case 4:
+			return "May";
+			break;
+		case 5:
+			return "Jun";
+			break;
+		case 6:
+			return "Jul";
+			break;
+		case 7:
+			return "Aug";
+			break;
+		case 8:
+			return "Sep";
+			break;
+		case 9:
+			return "Oct";
+			break;
+		case 10:
+			return "Nov";
+			break;
+		case 11:
+			return "Dec";
+			break;	
+	}
+}
+string getWeekday(int weekday){
+	switch(weekday){
+		case 1:
+			return "Mon";
+			break;
+		case 2:
+			return "Tue";
+			break;
+		case 3:
+			return "Wed";
+			break;
+		case 4:
+			return "Thu";
+			break;
+		case 5:
+			return "Fri";
+			break;
+		case 6:
+			return "Sat";
+			break;
+		case 0:
+			return "Sun";
+			break;
+	}
 }
