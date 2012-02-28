@@ -240,5 +240,6 @@ configT loadCfg(){
 							newConfig.logPath);
 
 	file.close();
+
 	return newConfig;
 }
