@@ -1,0 +1,5 @@
+httpPort: 8080
+telnetPort: 2121
+wwwPath: c:\websurvern\www
+password: hemligt
+logPath: c:\websurvern\log

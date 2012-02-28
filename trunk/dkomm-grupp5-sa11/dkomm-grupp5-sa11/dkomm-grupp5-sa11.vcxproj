@@ -97,6 +97,9 @@
   <ItemGroup>
     <Library Include="..\..\..\..\..\libs\PCLibs2010.lib" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="config.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

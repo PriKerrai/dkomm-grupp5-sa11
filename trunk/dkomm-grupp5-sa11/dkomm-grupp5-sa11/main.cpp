@@ -12,8 +12,19 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <ctime>
+
+typedef struct{
+	string httpPort;
+	string telnetPort;
+	string wwwPath;
+	string password;
+	string logPath;
+} configT;
+
 using namespace std;
 
+
+configT loadCfg();
 string getMime(string filename);
 string getMonth(int month);
 string getWeekday(int weekday);
@@ -23,10 +34,10 @@ char *mergeVector(char *vector1, ULONG size1, char *vector2, ULONG size2);
 char *loadHtml(string filename, ULONG &size);
 string getFiletype(string filename);
 string filetypeToMime(string filetype);
-
+string getCurrentDate();
 void stringToVector(string toConvert, char vector[], ULONG size);
 int _tmain(int argc, _TCHAR* argv[]){
-	
+	configT config = loadCfg();
 	// Initiera WinSock
 	WORD wVersionRequested;
 	WSADATA wsaData;
@@ -63,7 +74,8 @@ int _tmain(int argc, _TCHAR* argv[]){
 	// Vänta på inkommande anrop
 	struct sockaddr clientAddr;
 	int clientAddrLen = sizeof(clientAddr);
-	while(TRUE){
+	bool on = true;
+	while(on){
 	
 	SOCKET s1 = accept(s,&clientAddr,&clientAddrLen);
 	if(s1 != INVALID_SOCKET) {
@@ -75,7 +87,7 @@ int _tmain(int argc, _TCHAR* argv[]){
 		}
 		// Skriv ut meddelandet från klienten
 		int iResult;
-		char *inputHTTP = (char*) malloc(sizeof(char)*512);
+		char *inputHTTP = (char*) malloc(512);
 		iResult = recv(s1, inputHTTP, 512, 0);
 		fwrite(inputHTTP,1,iResult,stdout);
 		fflush(stdout);
@@ -88,16 +100,8 @@ int _tmain(int argc, _TCHAR* argv[]){
 		ULONG size = 0;
 		ULONG len = 0;
 		char *buffer;
-		if(filetype.compare("html") == 0){
-			buffer = loadHtml(filenameHTTP,size);
-			len = send(s1,buffer,size, 1);
-			
-		}else{
-			buffer = loadBin(filenameHTTP,size);
-			len = send(s1,buffer,size, 1);
-		}
-		
-		ULONG bytesIndex = size - len;
+		buffer = loadBin(filenameHTTP,size);
+		len = send(s1,buffer,size, 1);
 		
 		free(buffer);
 		// Stäng sockets
@@ -140,36 +144,6 @@ string getMime(string fileName){
 	else return "other";
 }
 
-char * loadHtml(string filename, ULONG &size){
-	int i = 0;
-	string line;
-	char ch;
-	char intToStrBuff[32];
-	ifstream htmlFile;
-	htmlFile.open(filename,ios::in);
-	size = 0;
-	while(htmlFile.good()){
-		htmlFile.get(ch);
-		size++;
-	}
-	string fileSize = _ultoa(size,intToStrBuff,10);
-	htmlFile.close();
-	htmlFile.open(filename,ios::in);
-	string message = createHeader(filename, size);
-	size += message.length();
-	
-	if(htmlFile.is_open()){
-		do{
-			getline(htmlFile, line);
-			message.append(line+"\n");
-		}while(htmlFile.good());
-	}else
-		message.append("<b>404</b>");
-	char *buffer = (char *)malloc(size);
-	stringToVector(message, buffer, size);
-	htmlFile.close();
-	return buffer;
-}
 char *loadBin(string filename, ULONG &size){
 	fstream binFile;
 	string line;
@@ -196,6 +170,7 @@ char *loadBin(string filename, ULONG &size){
 		buffer = mergeVector(headerVector,headLen,buffer,buffsize);
 	}else
 		size = 0;
+
 	return buffer;
 }
 void stringToVector(string toConvert, char vector[], ULONG size){
@@ -222,87 +197,48 @@ string createHeader(string filename, ULONG size){
 	string mime = getMime(filename);
 	stat(filename.c_str(),&attrib);
 	clock = gmtime(&(attrib.st_mtime));
-	string day = _itoa(clock->tm_mday,intToStrBuff,10);
-	string year =  _itoa(clock->tm_year,intToStrBuff,10);
-	string month = getMonth(clock->tm_mon);
-	string weekday = getWeekday(clock->tm_wday);
-	string hour = _itoa(clock->tm_hour,intToStrBuff,10);
-	string minute = _itoa(clock->tm_min,intToStrBuff,10);
-	string sec = _itoa(clock->tm_sec,intToStrBuff,10);
-	string date = weekday+", "+day+" "+month+" "+year+" "+hour+":"+minute+":"+sec+"GMT+1";
-	return "HTTP/1.1 200 OK\n"
-						"Date: Thu, 19 Feb 2012 16:27:04\n"
-						"Server: MegaSurver1337\n"
-						"Last-Modified: "+date+"\n"
-						"ETag: \"56d-9989200-1132c580\"\n"
-						"Content-Type: " +mime+
-						"\nContent-Length: " + _ultoa(size,intToStrBuff,10) + 
-						"\nAccept-Ranges: bytes\n"
-						"Connection: keep-alive\n"
-						"\n";
+	string temp = asctime(clock);
+	string fileDate = temp.substr(0,3)+", " +temp.substr(8,2)+" "+temp.substr(4,3)+" " +temp.substr(20,4)+" " +temp.substr(11,8);
+	temp = getCurrentDate();
+	string currentDate = temp.substr(0,3)+", " +temp.substr(8,2)+" "+temp.substr(4,3)+" " +temp.substr(20,4)+" " +temp.substr(11,8);
+	return	"HTTP/1.1 200 OK\n"
+			"Date: "+currentDate+ "\n"+
+			"Server: MegaSurver1337\n"
+			"Last-Modified: "+fileDate+"\n"
+			"Content-Type: " +mime+
+			"\nContent-Length: " + _ultoa(size,intToStrBuff,10) + 
+			"\nAccept-Ranges: bytes\n"
+			"Connection: closed\n"
+			"\n";
 }
-string getMonth(int month){
-	switch(month){
-		case 0:
-			return "Jan";
-			break;
-		case 1:
-			return "Feb";
-			break;
-		case 2:
-			return "Mar";
-			break;
-		case 3:
-			return "Apr";
-			break;
-		case 4:
-			return "May";
-			break;
-		case 5:
-			return "Jun";
-			break;
-		case 6:
-			return "Jul";
-			break;
-		case 7:
-			return "Aug";
-			break;
-		case 8:
-			return "Sep";
-			break;
-		case 9:
-			return "Oct";
-			break;
-		case 10:
-			return "Nov";
-			break;
-		case 11:
-			return "Dec";
-			break;	
-	}
+
+string getCurrentDate(){
+	struct tm* clock;
+	time_t timeinfo;
+	time(&timeinfo);
+	clock = localtime(&timeinfo);
+	return asctime(clock);
+	
 }
-string getWeekday(int weekday){
-	switch(weekday){
-		case 1:
-			return "Mon";
-			break;
-		case 2:
-			return "Tue";
-			break;
-		case 3:
-			return "Wed";
-			break;
-		case 4:
-			return "Thu";
-			break;
-		case 5:
-			return "Fri";
-			break;
-		case 6:
-			return "Sat";
-			break;
-		case 0:
-			return "Sun";
-			break;
-	}
+
+configT loadCfg(){
+	configT newConfig;
+	newConfig.logPath = "hej";
+	ifstream file;
+	file.open("config.cfg");
+	char *config = (char *) malloc(file.tellg());
+	file.read(config,file.tellg());
+	int ok = sscanf(config,	"httpPort: %s\n"
+							"telnetPort: %s\n"
+							"wwwPath: %s\n"
+							"password: %s\n"
+							"logPath: %s",	
+							newConfig.httpPort,
+							newConfig.telnetPort,
+							newConfig.wwwPath,
+							newConfig.password,
+							newConfig.logPath);
+
+	file.close();
+	return newConfig;
 }
