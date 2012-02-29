@@ -14,11 +14,11 @@
 #include <ctime>
 
 typedef struct{
-	char *httpPort;
-	char *telnetPort;
-	char *wwwPath;
-	char *password;
-	char *logPath;
+	char httpPort[150];
+	char telnetPort[150];
+	char wwwPath[150];
+	char password[150];
+	char logPath[150];
 } configT;
 
 using namespace std;
@@ -38,7 +38,7 @@ string getCurrentDate();
 void stringToVector(string toConvert, char vector[], ULONG size);
 
 int _tmain(int argc, _TCHAR* argv[]){
-	//configT config = loadCfg();
+	configT config = loadCfg();
 	// Initiera WinSock
 	WORD wVersionRequested;
 	WSADATA wsaData;
@@ -142,6 +142,8 @@ string getMime(string fileName){
 		return "image/jpeg";
 	else if(filetype.compare("png") == 0)
 		return "image/png";
+	else if(filetype.compare("zip") == 0)
+		return "application/zip";
 	else return "other";
 }
 
@@ -160,8 +162,8 @@ char *loadBin(string filename, ULONG &size){
 			buffsize = 0;
 		buffsize = binFile.tellg();
 		buffer = (char *) malloc(buffsize);
-
 		header = createHeader(filename, buffsize);
+		printf("\n\n\n\n\n%s\n",header._Myptr());
 		headLen =header.length(); 
 		headerVector = (char *)malloc(headLen);
 		headerVector = header._Myptr();
@@ -171,7 +173,7 @@ char *loadBin(string filename, ULONG &size){
 		buffer = mergeVector(headerVector,headLen,buffer,buffsize);
 	}else
 		size = 0;
-
+	
 	return buffer;
 }
 void stringToVector(string toConvert, char vector[], ULONG size){
@@ -202,15 +204,16 @@ string createHeader(string filename, ULONG size){
 	string fileDate = temp.substr(0,3)+", " +temp.substr(8,2)+" "+temp.substr(4,3)+" " +temp.substr(20,4)+" " +temp.substr(11,8);
 	temp = getCurrentDate();
 	string currentDate = temp.substr(0,3)+", " +temp.substr(8,2)+" "+temp.substr(4,3)+" " +temp.substr(20,4)+" " +temp.substr(11,8);
-	return	"HTTP/1.1 200 OK\n"
-			"Date: "+currentDate+ "\n"+
-			"Server: MegaSurver1337\n"
-			"Last-Modified: "+fileDate+"\n"
-			"Content-Type: " +mime+
-			"\nContent-Length: " + _ultoa(size,intToStrBuff,10) + 
-			"\nAccept-Ranges: bytes\n"
-			"Connection: closed\n"
-			"\n";
+	return	"HTTP/1.1 200 OK\r\n"
+			"Connection: close\r\n"
+			"Date: "+currentDate+ " GMT\r\n"+
+			"Server: MegaSurver1337/1.1 (UNIX)\r\n"
+			"Last-Modified: "+fileDate+" GMT\r\n"
+			"Content-Length: " + _ultoa(size,intToStrBuff,10) +"\r\n"+
+			"Content-Type: " +mime+"\r\n"+
+			"\r\n";
+		
+
 }
 
 string getCurrentDate(){
@@ -222,25 +225,31 @@ string getCurrentDate(){
 	
 }
 
-//configT loadCfg(){
-//	configT newConfig;
-//	newConfig.logPath = "hej";
-//	fstream file;
-//	file.open("config.txt", ios::in|ios::binary);
-//	_int64 hej = file.tellg();
-//	char *config;
-//	file.read(config,file.tellg());
-//	int ok = sscanf(config,	"httpPort: %s\n"
-//							"telnetPort: %s\n"
-//							"wwwPath: %s\n"
-//							"password: %s\n"
-//							"logPath: %s",	
-//							newConfig.httpPort,
-//							newConfig.telnetPort,
-//							newConfig.wwwPath,
-//							newConfig.password,
-//							newConfig.logPath);
-//
-//	file.close();
-//	return newConfig;
-//}
+configT loadCfg(){
+	configT newConfig;
+	fstream file;
+	int size = 0;
+	string line;
+	string config = "";
+	file.open("config.txt", ios::in|ios::binary);
+	while(file.good()){
+		getline(file,line);
+		size += line.length();
+		config.append(line);
+		config.append("\n");
+	}
+	int ok = sscanf(config._Myptr(),
+							"httpPort: %s\n"
+							"telnetPort: %s\n"
+							"wwwPath: %s\n"
+							"password: %s\n"
+							"logPath: %s",	
+							newConfig.httpPort,
+							newConfig.telnetPort,
+							newConfig.wwwPath,
+							newConfig.password,
+							newConfig.logPath);
+
+	file.close();
+	return newConfig;
+}
