@@ -14,11 +14,11 @@
 #include <ctime>
 
 typedef struct{
-	string httpPort;
-	string telnetPort;
-	string wwwPath;
-	string password;
-	string logPath;
+	char *httpPort;
+	char *telnetPort;
+	char *wwwPath;
+	char *password;
+	char *logPath;
 } configT;
 
 using namespace std;
@@ -36,8 +36,9 @@ string getFiletype(string filename);
 string filetypeToMime(string filetype);
 string getCurrentDate();
 void stringToVector(string toConvert, char vector[], ULONG size);
+
 int _tmain(int argc, _TCHAR* argv[]){
-	configT config = loadCfg();
+	//configT config = loadCfg();
 	// Initiera WinSock
 	WORD wVersionRequested;
 	WSADATA wsaData;
@@ -221,24 +222,25 @@ string getCurrentDate(){
 	
 }
 
-configT loadCfg(){
-	configT newConfig;
-	newConfig.logPath = "hej";
-	ifstream file;
-	file.open("config.cfg");
-	char *config = (char *) malloc(file.tellg());
-	file.read(config,file.tellg());
-	int ok = sscanf(config,	"httpPort: %s\n"
-							"telnetPort: %s\n"
-							"wwwPath: %s\n"
-							"password: %s\n"
-							"logPath: %s",	
-							newConfig.httpPort,
-							newConfig.telnetPort,
-							newConfig.wwwPath,
-							newConfig.password,
-							newConfig.logPath);
-
-	file.close();
-	return newConfig;
-}
+//configT loadCfg(){
+//	configT newConfig;
+//	newConfig.logPath = "hej";
+//	fstream file;
+//	file.open("config.txt", ios::in|ios::binary);
+//	_int64 hej = file.tellg();
+//	char *config;
+//	file.read(config,file.tellg());
+//	int ok = sscanf(config,	"httpPort: %s\n"
+//							"telnetPort: %s\n"
+//							"wwwPath: %s\n"
+//							"password: %s\n"
+//							"logPath: %s",	
+//							newConfig.httpPort,
+//							newConfig.telnetPort,
+//							newConfig.wwwPath,
+//							newConfig.password,
+//							newConfig.logPath);
+//
+//	file.close();
+//	return newConfig;
+//}
