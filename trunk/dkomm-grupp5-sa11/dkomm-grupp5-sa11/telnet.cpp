@@ -101,8 +101,6 @@ int _tmain(int argc, _TCHAR* argv[]){
 			i++;
 			}
 			*temp = ' ';
-			//cmd = line;
-			//send(s1,cmd._Myptr(),cmd.length(), 1);
 			int j = sscanf(line, "%s", cmd.c_str());
 			// lägger till ett \0 på slutet =)
 			cmd = cmd.c_str();
@@ -112,32 +110,55 @@ int _tmain(int argc, _TCHAR* argv[]){
 				arg = arg.c_str();
 				if(arg.compare("hemligt") == 0){
 					loggedIn = true;
-					send(s1,"u be h4x0r\n",11, 1);
+					send(s1,"You are now logged in\n",22, 1);
 				}
-				else loggedIn = false;
+				else {
+					loggedIn = false;
+					send(s1,"Invalid password\n",17, 1);
+				}
 			}
 			else if (cmd.compare("status") == 0 && loggedIn){
 				if (on)
-					send(s1,"auf\n",4,1);
+					send(s1,"Server is on\n",13,1);
 				else
-					send(s1,"ab\n",3,1);
+					send(s1,"Server is off\n",14,1);
 			}
 			else if (cmd.compare("loggfile") == 0 && loggedIn){
-				//fopen;
+				FILE *infile;
+				int i, j;
+	
+				infile = fopen(config.txt,"r");
+				/*char *logg = (char *)malloc(1024);
+				
+				ifstream infile;
+
+				infile.open ("config.txt", ifstream::in);
+
+				int ch = infile.get();
+				while (infile.good()) {
+					sprintf(logg,"%d", ch);
+					ch = infile.get();
+				}
+				send(s1,logg,sizeof(logg),1);
+				infile.close();*/
 			}
 			else if (cmd.compare("server") == 0 && loggedIn){
 				int j = sscanf(line, "server %s",arg.c_str());
 				arg = arg.c_str();
 				if(arg.compare("off") == 0){
 					on = false;
-					send(s1,"Turning off\n",12,1);
+					send(s1,"Webserver is now off\n",21,1);
 				}
 				else if(arg.compare("on") == 0){
 					on = true;
-					send(s1,"Turning on\n",11,1);
+					send(s1,"Webserver is now on\n",20,1);
 				}
+				else send(s1,"Invalid arguement (on/off)\n",27, 1);
 			}
-
+			else if(!loggedIn)
+				send(s1, "Enter password first\n",21,1);
+			else
+				send(s1, "Invalid command\n",16,1);
 			i = 0;
 			cmd = "\0";
 			arg = "\0";
@@ -145,28 +166,6 @@ int _tmain(int argc, _TCHAR* argv[]){
 		loggedIn = false;
 		closesocket(s1);
 
-		//int i = 0;
-		
-
-
-		// Skriv ut meddelandet från klienten
-		/*int iResult;
-		char *inputHTTP = (char*) malloc(512);
-		iResult = recv(s1, inputHTTP, 512, 0);
-		fwrite(inputHTTP,1,iResult,stdout);
-		fflush(stdout);
-		char cmdHTTP[80];
-		char filenameHTTP[80];
-		char protocolHTTP[80];
-		ok = sscanf(inputHTTP,"%s /%s %s",cmdHTTP,filenameHTTP,protocolHTTP);*/
-		// Skicka tillbaka ett svar till klienten
-		/*string filetype = getFiletype(filenameHTTP);
-		ULONG size = 0;
-		ULONG len = 0;
-		char *buffer;
-		buffer = loadBin(filenameHTTP,size);
-		len = send(s1,buffer,size, 1);*/
-		
 		//free(buffer);
 		// Stäng sockets
 		closesocket(s1);
