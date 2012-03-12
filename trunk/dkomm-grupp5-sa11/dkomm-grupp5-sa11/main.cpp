@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <ctime>
+#include <windows.h>
 
 typedef struct{
 	char httpPort[150];
@@ -46,6 +47,9 @@ int _tmain(int argc, _TCHAR* argv[]){
  	wVersionRequested = MAKEWORD( 2, 2 );
  	err = WSAStartup( wVersionRequested, &wsaData );
 
+	//Skapa huvudtrådar
+	//CreateThread(NULL,0,telnet,NULL,0,
+	
 	// Skapa en socket 
 	SOCKET s = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
 
