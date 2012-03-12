@@ -208,14 +208,16 @@ string createHeader(string filename, ULONG size){
 	string fileDate = temp.substr(0,3)+", " +temp.substr(8,2)+" "+temp.substr(4,3)+" " +temp.substr(20,4)+" " +temp.substr(11,8);
 	temp = getCurrentDate();
 	string currentDate = temp.substr(0,3)+", " +temp.substr(8,2)+" "+temp.substr(4,3)+" " +temp.substr(20,4)+" " +temp.substr(11,8);
-	return	"HTTP/1.1 200 OK\r\n"
+	return	"HTTP/1.1 200 OK\nConnection: close\nDate: Thu, 06 Aug 1998 12:00:15 GMT\nServer: Apache/1.3.0 (Unix)\nLast-Modified: Mon, 22 Jun 1998 GMT\nContent-Length: 6821\nContent-Type: text/html\n\n";
+		
+		/*"HTTP/1.1 200 OK\r\n"
 			"Connection: close\r\n"
 			"Date: "+currentDate+ " GMT\r\n"+
 			"Server: MegaSurver1337/1.1 (UNIX)\r\n"
 			"Last-Modified: "+fileDate+" GMT\r\n"
 			"Content-Length: " + _ultoa(size,intToStrBuff,10) +"\r\n"+
 			"Content-Type: " +mime+"\r\n"+
-			"\r\n";
+			"\r\n";*/
 		
 
 }
