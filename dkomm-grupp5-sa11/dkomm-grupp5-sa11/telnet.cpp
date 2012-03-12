@@ -49,9 +49,9 @@ int _tmain(int argc, _TCHAR* argv[]){
 	// Skapa en socket 
 	SOCKET s = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
 
-	// Ta reda på addressen till localhost:4567
+	// Ta reda på addressen till localhost:8081
 	struct addrinfo *info;
-    int ok = getaddrinfo("localhost","4567",NULL,&info);
+    int ok = getaddrinfo("localhost","8081",NULL,&info);
 	if(ok!=0) {
 		WCHAR * error = gai_strerror(ok);
 		printf("%s\n",error);
@@ -94,12 +94,17 @@ int _tmain(int argc, _TCHAR* argv[]){
 		char *temp = (char *)malloc(1);
 
 		int i = 0;
+		send(s1,"Welcome, enter password to log in. press escape to exit\n",56, 1);
 		while(true){
 			while(*temp != '\n'){
 				iResult = recv(s1, temp, 1, 0);
+				if(*temp == 27) //escape stänger telnetklienten och återgår till att lyssna på s1
+					break;
 				line[i] = *temp;
 			i++;
 			}
+			if(*temp == 27) //escape stänger telnetklienten och återgår till att lyssna på s1
+					break;
 			*temp = ' ';
 			int j = sscanf(line, "%s", cmd.c_str());
 			// lägger till ett \0 på slutet =)
@@ -125,22 +130,24 @@ int _tmain(int argc, _TCHAR* argv[]){
 			}
 			else if (cmd.compare("loggfile") == 0 && loggedIn){
 				FILE *infile;
-				int i, j;
+				char ch;
+				string ch2;
 	
-				infile = fopen(config.txt,"r");
-				/*char *logg = (char *)malloc(1024);
-				
-				ifstream infile;
-
-				infile.open ("config.txt", ifstream::in);
-
-				int ch = infile.get();
-				while (infile.good()) {
-					sprintf(logg,"%d", ch);
-					ch = infile.get();
+				infile = fopen("config.txt","r");
+				while(infile != NULL)
+				{
+					ch = fgetc(infile);
+					ch2 = ch;
+					if(ch != EOF)
+					{
+						send(s1,ch2._Myptr(), 1, 1);
+						if(ch == '\n')
+						{
+							ch2 = "\r";
+							send(s1,ch2._Myptr(), 1, 1);
+						}
+					}
 				}
-				send(s1,logg,sizeof(logg),1);
-				infile.close();*/
 			}
 			else if (cmd.compare("server") == 0 && loggedIn){
 				int j = sscanf(line, "server %s",arg.c_str());
@@ -164,7 +171,6 @@ int _tmain(int argc, _TCHAR* argv[]){
 			arg = "\0";
 		}
 		loggedIn = false;
-		closesocket(s1);
 
 		//free(buffer);
 		// Stäng sockets
