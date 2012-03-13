@@ -92,8 +92,8 @@ int _tmain(int argc, _TCHAR* argv[]){
 		}
 		// Skriv ut meddelandet från klienten
 		int iResult;
-		char *inputHTTP = (char*) malloc(512);
-		iResult = recv(s1, inputHTTP, 512, 0);
+		char *inputHTTP = (char*) malloc(1024);
+		iResult = recv(s1, inputHTTP, 1024, 0);
 		fwrite(inputHTTP,1,iResult,stdout);
 		fflush(stdout);
 		char cmdHTTP[80];
@@ -148,6 +148,8 @@ string getMime(string fileName){
 		return "image/png";
 	else if(filetype.compare("zip") == 0)
 		return "application/zip";
+	else if(filetype.compare("ico") == 0)
+		return "image/vnd.microsoft.icon";
 	else return "other";
 }
 
@@ -208,18 +210,15 @@ string createHeader(string filename, ULONG size){
 	string fileDate = temp.substr(0,3)+", " +temp.substr(8,2)+" "+temp.substr(4,3)+" " +temp.substr(20,4)+" " +temp.substr(11,8);
 	temp = getCurrentDate();
 	string currentDate = temp.substr(0,3)+", " +temp.substr(8,2)+" "+temp.substr(4,3)+" " +temp.substr(20,4)+" " +temp.substr(11,8);
-	return	"HTTP/1.1 200 OK\nConnection: close\nDate: Thu, 06 Aug 1998 12:00:15 GMT\nServer: Apache/1.3.0 (Unix)\nLast-Modified: Mon, 22 Jun 1998 GMT\nContent-Length: 6821\nContent-Type: text/html\n\n";
-		
-		/*"HTTP/1.1 200 OK\r\n"
+	string ulltoa =  _ultoa(size,intToStrBuff,10);
+	return	"HTTP/1.1 200 OK\r\n"
 			"Connection: close\r\n"
 			"Date: "+currentDate+ " GMT\r\n"+
 			"Server: MegaSurver1337/1.1 (UNIX)\r\n"
-			"Last-Modified: "+fileDate+" GMT\r\n"
+			"Last-Modified: "+fileDate+"\r\n"
 			"Content-Length: " + _ultoa(size,intToStrBuff,10) +"\r\n"+
 			"Content-Type: " +mime+"\r\n"+
-			"\r\n";*/
-		
-
+			"\r\n";
 }
 
 string getCurrentDate(){
@@ -259,3 +258,4 @@ configT loadCfg(){
 	file.close();
 	return newConfig;
 }
+
