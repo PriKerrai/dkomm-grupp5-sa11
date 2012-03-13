@@ -99,12 +99,12 @@ int _tmain(int argc, _TCHAR* argv[]){
 			while(true){
 				while(*temp != '\n'){
 					iResult = recv(s1, temp, 1, 0);
-					if(*temp == 27) //escape stänger telnetklienten och återgår till att lyssna på s1
+					if(*temp == 27 || iResult == 0) //escape stänger telnetklienten och återgår till att lyssna på s1
 						break;
 					line[i] = *temp;
 				i++;
 				}
-				if(*temp == 27) //escape stänger telnetklienten och återgår till att lyssna på s1
+				if(*temp == 27 || iResult == 0) //escape stänger telnetklienten och återgår till att lyssna på s1
 						break;
 				*temp = ' ';
 				int j = sscanf(line, "%s", cmd.c_str());
