@@ -26,5 +26,20 @@
     <None Include="config.txt">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="hej2.JPG">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="hej.JPG">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="hej.zip">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Ho.html">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="o.html">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
