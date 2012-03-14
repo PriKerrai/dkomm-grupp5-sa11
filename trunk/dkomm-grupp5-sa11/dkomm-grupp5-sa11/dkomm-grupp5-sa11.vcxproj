@@ -99,6 +99,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="config.txt" />
+    <None Include="hej.JPG" />
+    <None Include="hej.zip" />
+    <None Include="hej2.JPG" />
+    <None Include="Ho.html" />
+    <None Include="o.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
