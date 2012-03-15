@@ -417,7 +417,7 @@ unsigned __stdcall telnetThread(void *pArg){
 					char ch;
 					string ch2;
 	
-					infile = fopen("config.txt","r");
+					infile = fopen("loggfile.txt","r");
 					while(infile != NULL)
 					{
 						ch = fgetc(infile);
