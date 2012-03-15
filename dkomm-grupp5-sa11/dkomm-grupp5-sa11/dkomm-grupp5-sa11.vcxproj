@@ -98,7 +98,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="config.txt" />
+    <None Include="config.cfg" />
     <None Include="hej.JPG" />
     <None Include="hej.zip" />
     <None Include="hej2.JPG" />

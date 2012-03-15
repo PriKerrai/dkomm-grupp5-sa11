@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\www">
+      <UniqueIdentifier>{7c71a719-60a1-430b-a51f-9f898cccb811}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\cfg">
+      <UniqueIdentifier>{34b1cdd9-4bf1-427e-b625-e902b2a437fb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -23,23 +29,23 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="config.txt">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="hej2.JPG">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="hej.JPG">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="hej.zip">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\www</Filter>
     </None>
     <None Include="Ho.html">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\www</Filter>
+    </None>
+    <None Include="hej.zip">
+      <Filter>Source Files\www</Filter>
+    </None>
+    <None Include="hej2.JPG">
+      <Filter>Source Files\www</Filter>
     </None>
     <None Include="o.html">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\www</Filter>
+    </None>
+    <None Include="config.cfg">
+      <Filter>Source Files\cfg</Filter>
     </None>
   </ItemGroup>
 </Project>
