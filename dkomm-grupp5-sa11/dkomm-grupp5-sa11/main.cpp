@@ -71,6 +71,8 @@ string getMime(string fileName){
 		return "image/jpeg";
 	else if(filetype.compare("png") == 0)
 		return "image/png";
+	else if(filetype.compare("gif") == 0)
+		return "image/gif";
 	else if(filetype.compare("zip") == 0)
 		return "application/zip";
 	else if(filetype.compare("ico") == 0)
