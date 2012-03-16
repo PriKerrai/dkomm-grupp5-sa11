@@ -18,9 +18,9 @@ using namespace std;
 typedef struct{
 	string httpPort;
 	string telnetPort;
-	string wwwPath;
+	char *wwwPath;
 	string password;
-	string logPath;
+	char *logPath;
 } configT;
 
 typedef struct{
@@ -29,7 +29,7 @@ typedef struct{
 }sockInfoT;
 
 
-configT loadCfg();
+void loadCfg();
 string getMime(string filename);
 string getMonth(int month);
 string getWeekday(int weekday);
@@ -46,13 +46,18 @@ string getDate(void);
 string fileDate(string filename);
 int getStatus(string filename, string date);
 unsigned __stdcall telnetThread(void *pArg);
+void initializeConfig();
+string getFilePath(string fileName,int pathType);
 
+char hostName[100];
 int threads = 0;
 bool on = true;
 configT config;
 int _tmain(int argc, _TCHAR* argv[]){
-	config = loadCfg();
+	initializeConfig();
+	loadCfg();
 	// Initiera WinSock
+
 	HANDLE hThreadHttp;
 	HANDLE hThreadTelnet;
 	unsigned threadID;
@@ -104,7 +109,10 @@ char *loadBin(string filename, ULONG &size, int status){
 	int headLen = 0; 
 	char *headerVector;
 	string header;
-	binFile.open(filename,ios::in|ios::binary|ios::ate);
+	string file = getFilePath(filename,0);
+	
+		
+	binFile.open(file,ios::in|ios::binary|ios::ate);
 	size = 0;
 	if(!(binFile.tellg() > sizeof(ULONG)))
 		buffsize = 0;
@@ -148,7 +156,7 @@ string createHeader(string filename, ULONG size, int status){
 	struct tm* clock;
 	string mime = getMime(filename);
 	stat(filename.c_str(),&attrib);
-	string fileDate2 = fileDate(filename);
+	string fileDate2 = fileDate(getFilePath(filename,0));
 	string currentDate = getDate();
 	string status2 = _itoa(status,intToStrBuff,10);
 	return	"HTTP/1.1 "+status2+" OK\r\n"
@@ -163,8 +171,10 @@ string createHeader(string filename, ULONG size, int status){
 
 int getStatus(string filename, string date)
 {
-	ifstream iFile(filename);
-	string date2 = fileDate(filename);
+	string file = getFilePath(filename,0);
+	ifstream iFile(file);
+	string date2 = fileDate(file);
+	int x = date.compare(date2) ;
 	if(date.compare(date2) == 0 && iFile)
 	{
 		return 304;
@@ -175,33 +185,33 @@ int getStatus(string filename, string date)
 		return 404;
 }
 
-configT loadCfg(){
-	configT newConfig;
+void loadCfg(){
+	//configT newConfig;
 	fstream file;
 	int size = 0;
 	string line;
-	string config = "";
+	string configContent = "";
 	file.open("cfg/config.cfg", ios::in);
 	while(file.good()){
 		getline(file,line);
 		size += line.length();
-		config.append(line);
-		config.append("\n");
+		configContent.append(line);
+		configContent.append("\n");
 	}
-	int ok = sscanf(config._Myptr(),
+	int ok = sscanf(configContent._Myptr(),
 							"httpPort: %s\n"
 							"telnetPort: %s\n"
 							"wwwPath: %s\n"
 							"password: %s\n"
 							"logPath: %s",	
-							newConfig.httpPort.c_str(),
-							newConfig.telnetPort.c_str(),
-							newConfig.wwwPath.c_str(),
-							newConfig.password.c_str(),
-							newConfig.logPath.c_str());
+							config.httpPort.c_str(),
+							config.telnetPort.c_str(),
+							config.wwwPath,
+							config.password.c_str(),
+							config.logPath);
 
 	file.close();
-	return newConfig;
+	//return newConfig;
 }
 unsigned __stdcall httpMainThread(void *pArg){
 	if(on == true){
@@ -215,7 +225,7 @@ unsigned __stdcall httpMainThread(void *pArg){
 
 		// Ta reda på addressen till localhost:4567
 		struct addrinfo *info;
-		int ok = getaddrinfo("localhost","4567",NULL,&info);
+		int ok = getaddrinfo("localhost",config.httpPort.c_str(),NULL,&info);
 		if(ok!=0) {
 			WCHAR * error = gai_strerror(ok);
 			printf("%s\n",error);
@@ -242,22 +252,23 @@ unsigned __stdcall httpMainThread(void *pArg){
 		unsigned threadID;
 		SOCKET s1;
 		int x = 0;
-		sockInfoT *sockInfo;
-		sockInfo =(sockInfoT*) malloc(sizeof(sockInfoT));
+		
+//		sockInfo = (sockInfoT*) malloc(sizeof(sockInfoT));
+//		sockInfo->hostname = (char *) malloc(100);
 		while(true){
 			s1 = accept(s,&clientAddr,&clientAddrLen);
 			if(on){
 				if(s1 != INVALID_SOCKET) {
 					
-					char *hostName = (char* ) malloc(100);
+					
 					char portName[100];
 					int ok = getnameinfo(&clientAddr,clientAddrLen,hostName,100,portName,100,NI_NUMERICSERV );
-					sockInfo->s = s1;
-					sockInfo->hostname = hostName;
+					//sockInfo->s = s1;
+					//sockInfo->hostname = hostName;
 					if(ok == 0) {
 						//printf("Accept incoming from: %s at port %s\n",hostName,portName);
 					}
-					hThread = (HANDLE) _beginthreadex(NULL, 10, &httpThread, (void *) sockInfo, 0, &threadID);	
+					hThread = (HANDLE) _beginthreadex(NULL, 10, &httpThread, (void*) s1, 0, &threadID);	
 				}else {
 					int err = WSAGetLastError();
 					printf("%d\n",err);
@@ -267,7 +278,7 @@ unsigned __stdcall httpMainThread(void *pArg){
 				closesocket(s1);
 			}
 		}
-		free(sockInfo);
+//		free(sockInfo);
 		closesocket(s);
 		WSACleanup();
 		
@@ -277,19 +288,18 @@ unsigned __stdcall httpMainThread(void *pArg){
 }
 unsigned __stdcall httpThread(void *pArg){
 	threads++;
-	sockInfoT *sock = (sockInfoT*) pArg;
 	int ok;
 	printf("Threads: %d\n", threads);
-	SOCKET s1 = sock->s;
+	SOCKET s1 = (SOCKET) pArg;
 	// Skriv ut meddelandet från klienten
 	int iResult;
-	char *inputHTTP = (char*) malloc(1024);
-	iResult = recv(s1, inputHTTP, 1024, 0);
-	//fwrite(inputHTTP,1,iResult,stdout);
-	//fflush(stdout);
-	char cmdHTTP[80];
-	char filenameHTTP[80];
-	char protocolHTTP[80];
+	char *inputHTTP = (char*) malloc(2048);
+	iResult = recv(s1, inputHTTP, 2048, 0);
+	fwrite(inputHTTP,1,iResult,stdout);
+	fflush(stdout);
+	char cmdHTTP[512];
+	char filenameHTTP[512];
+	char protocolHTTP[512];
 	ok = sscanf(inputHTTP,"%s /%s %s",cmdHTTP,filenameHTTP,protocolHTTP);
 	// Skicka tillbaka ett svar till klienten
 	string filetype = getFiletype(filenameHTTP);
@@ -313,8 +323,8 @@ unsigned __stdcall httpThread(void *pArg){
 	buffer = loadBin(filenameHTTP,size, status);
 	len = send(s1,buffer,size, 0);
 			
-	printToLog(sock->hostname, cmdHTTP, filenameHTTP, protocolHTTP, status, size);
-	//free(buffer);
+	printToLog(hostName, cmdHTTP, filenameHTTP, protocolHTTP, status, size);
+	free(buffer);
 	// Stäng sockets
 	closesocket(s1);
 	threads--;
@@ -334,7 +344,7 @@ unsigned __stdcall telnetThread(void *pArg){
 
 	// Ta reda på addressen till localhost:8081
 	struct addrinfo *info;
-    int ok = getaddrinfo("localhost","8081",NULL,&info);
+	int ok = getaddrinfo("localhost",config.telnetPort._Myptr(),NULL,&info);
 	if(ok!=0) {
 		WCHAR * error = gai_strerror(ok);
 		printf("%s\n",error);
@@ -417,7 +427,7 @@ unsigned __stdcall telnetThread(void *pArg){
 					char ch;
 					string ch2;
 	
-					infile = fopen("loggfile.txt","r");
+					infile = fopen(getFilePath("log.txt",1).c_str(),"r");
 					while(infile != NULL)
 					{
 						ch = fgetc(infile);
@@ -499,8 +509,8 @@ void printToLog(string hostname, string cmdHTTP, string filenameHTTP, string pro
 {
 	FILE *outfile;
 	string date = getDate();
-
-	outfile = fopen("loggfile.txt","a");
+	string file = getFilePath("log.txt", 1);
+	outfile = fopen(file.c_str(),"a");
 	fprintf(outfile, "%s [%s GMT] \"%s %s %s\" %d %d\n", hostname.c_str(), date.c_str(), cmdHTTP.c_str(), filenameHTTP.c_str(), protocolHTTP.c_str(), status, fileSize);
 	
 	fclose(outfile);
@@ -510,6 +520,7 @@ string fileDate(string filename)
 {
 	char timeStr[ 100 ] = "";
 	struct stat buf;
+	//string file = getFilePath(filename, 0);
 	
 	if (!stat(filename.c_str(), &buf))//lägg till hela sökvägen
 	{
@@ -517,4 +528,52 @@ string fileDate(string filename)
 	}
 	string fileDate = timeStr;
 	return fileDate;
+}
+
+void initializeConfig(){
+	config.httpPort = "";
+	config.telnetPort = "";
+	config.wwwPath = (char*) malloc(50);
+	config.password = "";
+	config.logPath = (char*) malloc(50);
+}
+
+string getFilePath(string fileName, int pathType){
+	char tempChar = ' ';
+	string file = "";
+	int i = 0;
+	int strLen = fileName.length();
+	if(pathType == 0){
+		while(true){
+			tempChar = config.wwwPath[i];
+			if(tempChar == 92)
+				file.append("\\");
+			else if (tempChar != '\0')
+				file = file + config.wwwPath[i];
+			else {
+				for(int j = 0; j < strLen; j++){
+					file = file + fileName[j];
+				}
+				break;
+			}
+			i++;
+		}
+	}else if(pathType == 1){
+		while(true){
+			tempChar = config.logPath[i];
+			if(tempChar == 92)
+				file.append("\\");
+			else if (tempChar != '\0')
+				file = file + config.logPath[i];
+			else {
+				for(int j = 0; j < strLen; j++){
+					file = file + fileName[j];
+				}
+				break;
+			}
+			i++;
+		}
+	}
+
+	return file;
 }
