@@ -95,6 +95,12 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\..\..\..\..\log\log.txt" />
+    <None Include="..\..\..\..\..\..\..\..\www\hej.JPG" />
+    <None Include="..\..\..\..\..\..\..\..\www\hej.zip" />
+    <None Include="..\..\..\..\..\..\..\..\www\hej2.JPG" />
+    <None Include="..\..\..\..\..\..\..\..\www\Ho.html" />
+    <None Include="..\..\..\..\..\..\..\..\www\o.html" />
     <None Include="cfg\config.cfg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

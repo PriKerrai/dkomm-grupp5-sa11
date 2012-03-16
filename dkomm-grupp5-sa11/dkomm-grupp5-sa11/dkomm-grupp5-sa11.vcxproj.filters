@@ -23,5 +23,23 @@
     <None Include="cfg\config.cfg">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\..\..\..\..\..\..\..\www\o.html">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\www\hej.JPG">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\www\hej.zip">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\www\hej2.JPG">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\www\Ho.html">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\log\log.txt">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
