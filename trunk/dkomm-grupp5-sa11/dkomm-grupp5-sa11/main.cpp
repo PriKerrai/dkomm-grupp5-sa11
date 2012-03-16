@@ -23,22 +23,14 @@ typedef struct{
 	char *logPath;
 } configT;
 
-typedef struct{
-	SOCKET s;
-	char *hostname;
-}sockInfoT;
 
 
 void loadCfg();
 string getMime(string filename);
-string getMonth(int month);
-string getWeekday(int weekday);
 string createHeader(string filename, ULONG size, int status);
 char *loadBin(string filename, ULONG &size, int status);
 char *mergeVector(char *vector1, ULONG size1, char *vector2, ULONG size2);
-char *loadHtml(string filename, ULONG &size);
 string getFiletype(string filename);
-string filetypeToMime(string filetype);
 unsigned __stdcall httpThread(void *pArg);
 unsigned __stdcall httpMainThread(void *pArg);
 void printToLog(string hostname, string cmdHTTP, string filenameHTTP, string protocolHTTP, int status, ULONG fileSize);
@@ -97,7 +89,7 @@ string getMime(string fileName){
 		return "application/zip";
 	else if(filetype.compare("ico") == 0)
 		return "image/vnd.microsoft.icon";
-	else return "other";
+	else return "application/octet-stream";
 }
 
 char *loadBin(string filename, ULONG &size, int status){
@@ -384,12 +376,13 @@ unsigned __stdcall telnetThread(void *pArg){
 			// Läsa av 
 			string cmd;
 			string arg;
-			char line[100];
+			char *line;
 			char *temp = (char *)malloc(1);
 
 			int i = 0;
 			send(s1,"Welcome, enter password to log in. press escape to exit\n\r",57, 1);
 			while(true){
+				line = (char*) malloc(256);
 				while(*temp != '\n'){
 					iResult = recv(s1, temp, 1, 0);
 					if(*temp == 27 || iResult == 0) //escape stänger telnetklienten och återgår till att lyssna på s1
@@ -403,18 +396,21 @@ unsigned __stdcall telnetThread(void *pArg){
 				int j = sscanf(line, "%s", cmd.c_str());
 				// lägger till ett \0 på slutet =)
 				cmd = cmd.c_str();
-				int hej = cmd.compare("password");
 				if ((cmd.compare("password") == 0) && !loggedIn){
-					int j = sscanf(line, "password %s",arg.c_str());
-					arg = arg.c_str();
-					if(arg.compare("hemligt") == 0){
-						loggedIn = true;
-						send(s1,"You are now logged in\n\r",23, 1);
-					}
-					else {
+					int pos = cmd.length();
+					if(line[pos] != '\n'){ 
+						int j = sscanf(line, "password %s",arg.c_str());
+						arg = arg.c_str();
+
+						if(arg.compare(config.password.c_str()) == 0&& arg[0] != '\0'){
+							loggedIn = true;
+							send(s1,"You are now logged in\n\r",23, 1);
+						}
+						else {
 						loggedIn = false;
 						send(s1,"Invalid password\n\r",18, 1);
-					}
+						}
+					}else send(s1,"Invalid password\n\r",18, 1);
 				}
 				else if (cmd.compare("status") == 0 && loggedIn){
 					if (on)
@@ -468,6 +464,7 @@ unsigned __stdcall telnetThread(void *pArg){
 				i = 0;
 				cmd = "\0";
 				arg = "\0";
+			free(line);
 			}
 			loggedIn = false;
 
