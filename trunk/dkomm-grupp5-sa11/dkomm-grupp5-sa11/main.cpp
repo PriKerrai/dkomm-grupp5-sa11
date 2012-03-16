@@ -323,6 +323,7 @@ unsigned __stdcall httpThread(void *pArg){
 	len = send(s1,buffer,size, 0);
 			
 	printToLog(hostName, cmdHTTP, filenameHTTP, protocolHTTP, status, size);
+	free(filenameHTTP);
 	free(buffer);
 	// Stäng sockets
 	closesocket(s1);
@@ -471,7 +472,7 @@ unsigned __stdcall telnetThread(void *pArg){
 				i = 0;
 				cmd = "\0";
 				arg = "\0";
-			free(line);
+				free(line);
 			}
 			loggedIn = false;
 
