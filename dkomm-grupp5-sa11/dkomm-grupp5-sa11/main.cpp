@@ -290,10 +290,17 @@ unsigned __stdcall httpThread(void *pArg){
 	fwrite(inputHTTP,1,iResult,stdout);
 	fflush(stdout);
 	char cmdHTTP[512];
-	char filenameHTTP[512];
+	char *filenameHTTP =  (char*)malloc(512);
+	for (int j = 0; j < 512;j++)
+		filenameHTTP[j] = '\0';
 	char protocolHTTP[512];
-	ok = sscanf(inputHTTP,"%s /%s %s",cmdHTTP,filenameHTTP,protocolHTTP);
+	ok = sscanf(inputHTTP,"%s %s %s",cmdHTTP,filenameHTTP,protocolHTTP);
 	// Skicka tillbaka ett svar till klienten
+	if(filenameHTTP[1] == '\0')
+		filenameHTTP = "ho.html";
+	else {
+		ok = sscanf(inputHTTP,"%s /%s %s",cmdHTTP,filenameHTTP,protocolHTTP);
+	}
 	string filetype = getFiletype(filenameHTTP);
 	ULONG size = 0;
 	ULONG len = 0;
